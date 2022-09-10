@@ -93,7 +93,7 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
-        'mongodb' => [
+        /* 'mongodb' => [
             'driver' => 'mongodb',
             'host' => env('DB_HOST_MONGO', '127.0.0.1'),
             'port' => env('DB_PORT_MONGO', 27017),
@@ -105,7 +105,7 @@ return [
                 // see https://www.php.net/manual/en/mongodb-driver-manager.construct.php under "Uri Options" for a list of complete parameters that you can use
         
             ],
-        ],
+        ], */
     ],
 
     /*

@@ -40,11 +40,11 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
         Route::delete('{id}', [App\Http\Controllers\ArticleController::class, 'destroy']);
     });
     
-    Route::group(['prefix' => 'articles'], function() {
-        Route::get('', [App\Http\Controllers\ArticleController::class, 'index']);
-        Route::post('', [App\Http\Controllers\ArticleController::class, 'store']);
-        Route::put('{id}', [App\Http\Controllers\ArticleController::class, 'update']);
-        Route::delete('{id}', [App\Http\Controllers\ArticleController::class, 'destroy']);
+    Route::group(['prefix' => 'webinars'], function() {
+        Route::get('', [App\Http\Controllers\WebinarController::class, 'index']);
+        Route::post('', [App\Http\Controllers\WebinarController::class, 'store']);
+        Route::put('{id}', [App\Http\Controllers\WebinarController::class, 'update']);
+        Route::delete('{id}', [App\Http\Controllers\WebinarController::class, 'destroy']);
     });
 
     Route::post('logout', [App\Http\Controllers\UserController::class, 'logout']);
