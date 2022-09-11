@@ -29,4 +29,9 @@ class Course extends Model
     {
         return $this->hasMany(CourseSection::class);
     }
+
+    public function image()
+    {
+        return $this->hasOne(File::class, 'id', 'thumbnail');
+    }
 }
