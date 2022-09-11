@@ -9,4 +9,9 @@ class Article extends Model
 {
     use HasFactory;
     protected $guarded = [];
+
+    public function image()
+    {
+        return $this->hasOne(File::class, 'id', 'thumbnail');
+    }
 }

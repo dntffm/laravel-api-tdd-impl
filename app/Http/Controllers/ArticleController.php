@@ -15,7 +15,7 @@ class ArticleController extends Controller
      */
     public function index()
     {
-        $data = Article::orderBy('created_at', 'desc')->get();
+        $data = Article::with(['image'])->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'success' => true,
