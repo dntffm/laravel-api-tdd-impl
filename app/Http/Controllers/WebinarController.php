@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Webinar;
 use Illuminate\Http\Request;
+use Validator;
 
 class WebinarController extends Controller
 {
@@ -22,16 +23,6 @@ class WebinarController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -39,7 +30,23 @@ class WebinarController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = Validator::make($request->all(), [
+
+        ]);
+
+        if($validated->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validated->errors()
+            ], 422); 
+        }
+
+        Webinar::create($request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => "Webinar successfully created!"
+        ], 200);
     }
 
     /**
