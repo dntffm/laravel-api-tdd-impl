@@ -31,7 +31,12 @@ class WebinarController extends Controller
     public function store(Request $request)
     {
         $validated = Validator::make($request->all(), [
-
+            "webinar_name" => "required",
+            "description" => "required",
+            "price" => "required",
+            "link" => "required",
+            "started_at" => "required",
+            "register_end_at" => "required",
         ]);
 
         if($validated->fails()) {
