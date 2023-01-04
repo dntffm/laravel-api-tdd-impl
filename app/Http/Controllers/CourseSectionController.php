@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CourseSection;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class CourseSectionController extends Controller
@@ -12,9 +13,15 @@ class CourseSectionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($courseId)
     {
-        //
+        $user = User::findOrfail(auth()->user()->id);
+        $data = $user->courses()->where('course_id', $courseId)->first()->sections()->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ], 200);
     }
 
     /**

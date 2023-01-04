@@ -10,4 +10,9 @@ class Webinar extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function thumbnail()
+    {
+        return $this->hasOne(File::class, 'id', 'thumbnail');
+    }
 }

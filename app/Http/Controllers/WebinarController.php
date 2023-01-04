@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Webinar;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Validator;
 
 class WebinarController extends Controller
@@ -15,9 +16,12 @@ class WebinarController extends Controller
      */
     public function index()
     {
-        $data = Webinar::orderBy('created_at', 'desc')->get();
+        $data = Webinar::with('thumbnail')
+        ->orderBy('created_at', 'desc')
+        ->get();
+        
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'data' => $data
         ], 200);
     }
@@ -45,8 +49,21 @@ class WebinarController extends Controller
                 'message' => $validated->errors()
             ], 422); 
         }
+        
+        $webinar = Webinar::create($request->except('thumbnail'));
 
-        Webinar::create($request->all());
+        if($request->has('thumbnail')) {
+            $thumbnail = $request->file('thumbnail');
+            $thumbnailName = $thumbnail->storeAs('public/webinar', time() . $thumbnail->getClientOriginalName());
+            $wt = $webinar->thumbnail()->create([
+                'url' => $thumbnailName,
+                'type' => 'image'
+            ]);
+
+            $webinar->update([
+                'thumbnail' => $wt->id
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -80,22 +97,91 @@ class WebinarController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\webinar  $webinar
+     * @param  int  $webinar
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, webinar $webinar)
+    public function update(Request $request, $webinar)
     {
-        //
+        $webinar = Webinar::find($webinar);
+
+        if(!$webinar) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Webinar Not Found!'
+            ], 404);
+        }
+
+        $webinar->update($request->all());
+
+        if($request->has('thumbnail')) {
+            $thumbnail = $request->file('thumbnail');
+            $thumbnailName = $thumbnail->storeAs('public/webinar', time() . $thumbnail->getClientOriginalName());
+            $wt = $webinar->thumbnail()->create([
+                'url' => $thumbnailName,
+                'type' => 'image'
+            ]);
+
+            $webinar->update([
+                'thumbnail' => $wt->id
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Webinar successfully updated!"
+        ], 200);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\webinar  $webinar
+     * @param  int  $webinar
      * @return \Illuminate\Http\Response
      */
-    public function destroy(webinar $webinar)
+    public function destroy($webinar)
     {
-        //
+        $webinarChosen = Webinar::find($webinar);
+
+        if(!$webinarChosen) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Webinar Not Found!'
+            ], 404);
+        }
+        
+        $webinarChosen->destroy($webinar);
+        return response()->json([
+            'success' => true,
+            'message' => "Webinar successfully deleted!"
+        ], 200);
+    }
+
+    public function joinWebinar(Request $request)
+    {
+        $user = Auth::user();
+        $webinar = $request->webinar_id;
+        $webinarChosen = Webinar::where('id', $webinar)->first();
+        
+        if(!$webinarChosen) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Webinar Not Found!'
+            ], 404);
+        }
+
+
+        if($webinarChosen->price < 1) {
+            $user->agendas()->attach($webinar);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Webinar successfully joined!"
+            ], 200);
+        }
+        //PAYMENT GATEWAY SERVICE
+        return response()->json([
+            'success' => true,
+            'message' => "Webinar successfully joined!"
+        ], 200);
     }
 }

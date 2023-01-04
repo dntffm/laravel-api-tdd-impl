@@ -11,7 +11,14 @@ class Course extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'course_name',
+        'description',
+        'price',
+        'discount',
+        'thumbnail',
+        'course_category'
+    ];
 
     public function category()
     {

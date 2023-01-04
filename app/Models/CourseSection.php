@@ -10,4 +10,9 @@ class CourseSection extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function subsections()
+    {
+        return $this->hasMany(CourseSubSection::class, 'section_id');
+    }
 }

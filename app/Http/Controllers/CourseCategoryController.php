@@ -88,11 +88,25 @@ class CourseCategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CourseCategory  $courseCategory
+     * @param   int $courseCategory
      * @return \Illuminate\Http\Response
      */
-    public function destroy(CourseCategory $courseCategory)
+    public function destroy($courseCategory)
     {
-        //
+        $cc = CourseCategory::find($courseCategory);
+
+        if($cc) {
+            $cc->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course category successfully deleted!'
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Course category not found!'
+        ], 404);
     }
 }

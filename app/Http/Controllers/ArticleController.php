@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Validator;
 
 class ArticleController extends Controller
@@ -53,7 +54,20 @@ class ArticleController extends Controller
             ], 422);
         }
 
-        Article::create($request->all());
+        $request->merge(['created_by' => Auth::user()->id]);
+        $article = Article::create($request->except('thumbnail'));
+
+        if($request->has('thumbnail')) {
+            $thumbnail = $request->file('thumbnail')->storeAs('public/article', time().$request->file('thumbnail')->getClientOriginalName());
+            $at = $article->image()->create([
+                'url' => $thumbnail,
+                'type' => 'image'
+            ]);
+
+            $article->update([
+                'thumbnail' => $at->id
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -64,12 +78,17 @@ class ArticleController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Article  $article
+     * @param  $id  $article
      * @return \Illuminate\Http\Response
      */
-    public function show(Article $article)
+    public function show($article)
     {
-        //
+        $data = Article::with(['image'])->findOrFail($article);
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ], 200);
     }
 
     /**
@@ -92,9 +111,28 @@ class ArticleController extends Controller
      */
     public function update(Request $request, $article)
     {
-        $article = Article::findOrFail($article);
+        $article = Article::find($article);
 
-        $article->update($request->all());
+        if(!$article) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Article not found!'
+            ], 404);
+        }
+
+        $article->update($request->except('thumbnail'));
+
+        if($request->has('thumbnail')) {
+            $thumbnail = $request->file('thumbnail')->storeAs('public/article', time().$request->file('thumbnail')->getClientOriginalName());
+            $at = $article->image()->create([
+                'url' => $thumbnail,
+                'type' => 'image'
+            ]);
+
+            $article->update([
+                'thumbnail' => $at->id
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -105,11 +143,25 @@ class ArticleController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Article  $article
+     * @param  int  $article
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Article $article)
+    public function destroy($article)
     {
-        //
+        $article = Article::find($article);
+
+        if(!$article) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Article not found!'
+            ], 404);
+        }
+
+        $article->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Article successfully deleted!'
+        ], 200);
     }
 }

@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\CourseSection;
+use App\Models\CourseSubSection;
+use App\Models\Quiz;
+use App\Models\QuizAnswer;
 use App\Models\UserCourse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -23,6 +26,23 @@ class CourseController extends Controller
         $data = Course::orderBy('created_at', 'desc')
         ->with(['category', 'image'])
         ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ], 200);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id) {
+        $data = Course::with(['category', 'image', 'sections'])
+        ->where('id', $id)
+        ->first();
 
         return response()->json([
             'success' => true,
@@ -57,24 +77,84 @@ class CourseController extends Controller
 
         DB::beginTransaction();
         try {
-            $course = Course::create($request->except('course_sections'));
+            $course = Course::create($request->except(['course_sections', 'thumbnail']));
             
             if($request->has('course_sections')) {
-                foreach($request->course_sections as $section) {
-                    $course->sections()->create($section);
+                foreach($request->course_sections as $sectione) {
+                    
+                    $section = $course->sections()->create([
+                        'section_name' => $sectione['section_name'],
+                        'course_id' => $course->id
+                    ]);
+
+                    if($sectione['sub_sections']) {
+                        $subsections = $sectione['sub_sections'];
+                        foreach($subsections as $subsection) {
+                            if($subsection['type'] === 'quiz') {
+                                $ss = CourseSubSection::create([
+                                    'title' => $subsection['title'],
+                                    'type' => 'quiz',
+                                    'section_id' => $section->id
+                                ]);
+                                
+                                foreach($subsection['questions'] as $question) {
+                                    $quiz = Quiz::create([
+                                        'question' => $question['question'],
+                                        'sub_section_id' => $ss->id
+                                    ]);
+
+                                    foreach($question['answers'] as $answer) {
+                                        QuizAnswer::create([
+                                            'answer' => $answer['answer'],
+                                            'is_correct' => $answer['is_correct'],
+                                            'quiz_id' => $quiz->id
+                                        ]);
+                                    }
+                                }
+    
+                            } else if($subsection['type'] === 'video') {
+                                CourseSubSection::create([
+                                    'title' => $subsection['title'],
+                                    'video_url' => $subsection['video_url'],
+                                    'type' => 'video',
+                                    'section_id' => $section->id
+                                ]);
+                            } else {
+                                continue;
+                            }
+                        }
+
+                    }
                 }
+
+            }
+
+            if($request->has('thumbnail')) {
+                $thumbnail = $request
+                ->file('thumbnail')
+                ->storeAs('public/course', time().$request->thumbnail->getClientOriginalName());
+                
+                $image = $course->image()->create([
+                    'url' => $thumbnail,
+                    'type' => 'image'
+                ]);
+
+                $course->update([
+                    'thumbnail' => $image->id
+                ]);
             }
 
             DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Course successfully created!'
+            ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
+            dd($th);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Course successfully created!'
-        ], 200);
     }
 
     /**
@@ -99,19 +179,30 @@ class CourseController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Course  $course
+     * @param  int  $course
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $course)
     {
         $courseChosen = Course::findOrFail($course);
 
-        $courseChosen->update($request->all());
+        $courseChosen->update($request->except(['course_sections', 'thumbnail']));
 
         if($request->has('course_sections')) {
             foreach($request->course_sections as $section){
-                $course->sections()->where('id', $section->id)->first()->update($section);
+                $courseChosen->sections()->where('id', $section['id'])->first()->update($section);
             }
+        }
+
+        if($request->has('thumbnail')) {
+            $thumbnail = $request
+            ->file('thumbnail')
+            ->storeAs('public/course', time().$request->thumbnail->getClientOriginalName());
+            
+            $courseChosen->image()->update([
+                'url' => $thumbnail,
+                'type' => 'image'
+            ]);
         }
 
         return response()->json([
@@ -123,7 +214,7 @@ class CourseController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Course  $course
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($course)

@@ -11,7 +11,7 @@ use Validator;
 
 class UserController extends Controller
 {
-    public function register(Request $request)
+    /* public function register(Request $request)
     {
         $validate = Validator::make($request->all(), [
             'name'  => 'required',
@@ -49,7 +49,7 @@ class UserController extends Controller
             'message' => 'Registration Success',
             'user' => $user,
         ], 200);
-    }
+    } */
 
     public function login(Request $request)
     {
@@ -96,7 +96,7 @@ class UserController extends Controller
         ], 403);
     }
 
-    public function logout()
+    /* public function logout()
     {
         if(Auth::check()) {
             $userToken = Auth::user()->tokens();
@@ -107,5 +107,5 @@ class UserController extends Controller
                 'message' => 'Logout successfull!',
             ], 200);
         }
-    }
+    } */
 }
