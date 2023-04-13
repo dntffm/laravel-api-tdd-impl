@@ -63,7 +63,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
         });
 
         Route::group(['prefix' => 'quiz'], function(){
-            Route::put('{saveAnswer}', [QuizController::class, ''])->name('customer.save.quiz.answer');
+            Route::post('', [QuizController::class, 'saveAnswer'])->name('customer.save.quiz.answer');
         });
 
         Route::group(['prefix' => 'agendas'], function() {

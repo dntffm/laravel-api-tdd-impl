@@ -6,7 +6,7 @@ use App\Models\Webinar;
 
 use function Pest\Laravel\actingAs;
 
-test('customer dapat melihat daftar agenda berdasarkan tanggal acara', function() {
+test('customer dapat melihat daftar agenda', function() {
     $this->withoutExceptionHandling();
 
     $user = User::factory()->create([
