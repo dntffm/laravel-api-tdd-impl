@@ -20,7 +20,7 @@ class UserCourseController extends Controller
     {
         $user = User::findOrfail(auth()->user()->id);
         $data = $user->courses()->with('image')->get();
-
+    
         return response()->json([
             'success' => true,
             'data' => $data
@@ -66,7 +66,7 @@ class UserCourseController extends Controller
             ], 200);
         }
 
-        UserCourse::create([...$input, 'status' => 'inactive']);
+        UserCourse::create([...$input, 'status' => 'active']);
             
         return response()->json([
             'success' => true,

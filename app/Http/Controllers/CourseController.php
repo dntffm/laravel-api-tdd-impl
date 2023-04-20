@@ -152,7 +152,7 @@ class CourseController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
+            throw $th;
         }
 
     }
@@ -184,6 +184,23 @@ class CourseController extends Controller
      */
     public function update(Request $request, $course)
     {
+        $validated = Validator::make($request->all(), [
+            'course_name' => 'required',
+            'description' => 'required',
+            'price' => 'required',
+            'discount' => 'required',
+            'thumbnail' => 'required',
+            'course_category' => 'required',
+            'course_sections' => 'array'
+        ]);
+
+        if($validated->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validated->errors()
+            ], 422);
+        }
+        
         $courseChosen = Course::findOrFail($course);
 
         $courseChosen->update($request->except(['course_sections', 'thumbnail']));
@@ -229,6 +246,7 @@ class CourseController extends Controller
         }
 
         $courseChosen->delete($course);
+
         return response()->json([
             'success' => true,
             'message' => 'Course Successfully Deleted!'

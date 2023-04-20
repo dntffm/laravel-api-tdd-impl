@@ -13,8 +13,12 @@ class AgendaController extends Controller
         $user = User::findOrFail(Auth::user()->id);
 
         $data = $user->agendas()
-        ->whereMonth('started_at', $request->month)
-        ->whereYear('started_at', $request->year)
+        ->when($request->has('month'), function($query) use($request){
+            $query->whereMonth('started_at', $request->month);
+        })
+        ->when($request->has('year'), function($query) use($request) {
+            $query->whereYear('started_at', $request->year);
+        })
         ->orderBy('started_at', 'desc')
         ->get();
 

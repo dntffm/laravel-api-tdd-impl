@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Webinar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Validator;
 
 class WebinarController extends Controller
@@ -50,25 +51,32 @@ class WebinarController extends Controller
             ], 422); 
         }
         
-        $webinar = Webinar::create($request->except('thumbnail'));
-
-        if($request->has('thumbnail')) {
-            $thumbnail = $request->file('thumbnail');
-            $thumbnailName = $thumbnail->storeAs('public/webinar', time() . $thumbnail->getClientOriginalName());
-            $wt = $webinar->thumbnail()->create([
-                'url' => $thumbnailName,
-                'type' => 'image'
-            ]);
-
-            $webinar->update([
-                'thumbnail' => $wt->id
-            ]);
+        DB::beginTransaction();
+        try {
+            $webinar = Webinar::create($request->except('thumbnail'));
+        
+            if($request->has('thumbnail')) {
+                $thumbnail = $request->file('thumbnail');
+                $thumbnailName = $thumbnail->storeAs('public/webinar', time() . $thumbnail->getClientOriginalName());
+                $wt = $webinar->thumbnail()->create([
+                    'url' => $thumbnailName,
+                    'type' => 'image'
+                ]);
+        
+                $webinar->update([
+                    'thumbnail' => $wt->id
+                ]);
+            }
+            
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => "Webinar successfully created!"
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => "Webinar successfully created!"
-        ], 200);
     }
 
     /**
@@ -179,6 +187,8 @@ class WebinarController extends Controller
             ], 200);
         }
         //PAYMENT GATEWAY SERVICE
+        $user->agendas()->attach($webinar);
+
         return response()->json([
             'success' => true,
             'message' => "Webinar successfully joined!"
