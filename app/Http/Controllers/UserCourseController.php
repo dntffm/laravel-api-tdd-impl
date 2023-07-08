@@ -92,7 +92,8 @@ class UserCourseController extends Controller
 
         if(!$courseIsTaken)  {
             return response()->json([
-
+                'success' => false,
+                'message' => 'Course Not Found!'
             ], 404);
         }
 

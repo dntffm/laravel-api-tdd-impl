@@ -63,6 +63,7 @@ test('admin dapat menambah course baru', function() {
     
     actingAs($user)
     ->postJson(route('admin.course.store'), $course)
+    ->assertJson(['success' => true])
     ->assertStatus(200);
 });
 

@@ -17,7 +17,7 @@ test("Login using valid data and valid credential", function() {
     ])
     ->assertStatus(200);
 });
-/* 
+
 test("Login using invalid data", function() {
     postJson('api/login', [
         "email" => "test1@example.com",
@@ -55,4 +55,4 @@ test("Login using invalid credential (wrong password)", function() {
         'message',
     ])
     ->assertStatus(403);
-}); */
+});
