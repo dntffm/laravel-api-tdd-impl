@@ -31,7 +31,7 @@ class ArticleController extends Controller
      */
     public function create()
     {
-        
+
     }
 
     /**
@@ -48,10 +48,7 @@ class ArticleController extends Controller
         ]);
 
         if($validated->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validated->errors()
-            ], 422);
+            return $this->sendError($validated->errors(), 422);
         }
 
         $request->merge(['created_by' => Auth::user()->id]);
@@ -69,10 +66,7 @@ class ArticleController extends Controller
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Article successfully created!'
-        ], 200);
+        return $this->sendResponse('Article successfully created!', $article);
     }
 
     /**
@@ -85,21 +79,7 @@ class ArticleController extends Controller
     {
         $data = Article::with(['image'])->findOrFail($article);
 
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ], 200);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Article  $article
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Article $article)
-    {
-        //
+        return $this->sendResponse('Fetched succesfully!', $data);
     }
 
     /**
@@ -114,10 +94,7 @@ class ArticleController extends Controller
         $article = Article::find($article);
 
         if(!$article) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Article not found!'
-            ], 404);
+            return $this->sendError('Article not found!', 404);
         }
 
         $article->update($request->except('thumbnail'));
@@ -134,10 +111,7 @@ class ArticleController extends Controller
             ]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Course successfully updated!'
-        ], 200);
+        return $this->sendResponse('Article successfully updated!', $article->fresh());
     }
 
     /**
@@ -151,17 +125,11 @@ class ArticleController extends Controller
         $article = Article::find($article);
 
         if(!$article) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Article not found!'
-            ], 404);
+            return $this->sendError('Article not found!', 404);
         }
 
         $article->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Article successfully deleted!'
-        ], 200);
+        return $this->sendResponse('Article successfully deleted!');
     }
 }

@@ -22,10 +22,7 @@ class QuizController extends Controller
 
         $user->answers()->sync($answer);
 
-        return response()->json([
-            'success' => true,
-            'message' => "Answer saved!"
-        ], 200);
+        return $this->sendResponse("Answer saved!");
 
     }
 }

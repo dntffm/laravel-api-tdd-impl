@@ -19,6 +19,7 @@ test('admin dapat menambah webinar baru dengan valid data', function() {
     $webinar['thumbnail'] = UploadedFile::fake()->image('thumbnail.jpg');
     actingAs($user)
     ->postJson(route('admin.webinar.store'), $webinar->toArray())
+    ->assertJson(['success' => true])
     ->assertStatus(200);
 });
 
@@ -32,6 +33,7 @@ test('admin tidak dapat menambah webinar baru dengan invalid data', function() {
     $webinar['thumbnail'] = UploadedFile::fake()->image('thumbnail.jpg');
     actingAs($user)
     ->postJson(route('admin.webinar.store'), $webinar->toArray())
+    ->assertJson(['success' => false])
     ->assertStatus(422);
 });
 
@@ -45,6 +47,7 @@ test('admin dapat melihat daftar webinar', function() {
 
     actingAs($user)
     ->getJson(route('admin.webinar.index'))
+    ->assertJson(['success' => true])
     ->assertStatus(200);
 });
 
@@ -58,6 +61,7 @@ test('admin dapat menghapus webinar dengan valid ID', function() {
 
     actingAs($user)
     ->deleteJson(route('admin.webinar.destroy', $webinar->id))
+    ->assertJson(['success' => true])
     ->assertStatus(200);
 });
 
@@ -71,6 +75,7 @@ test('admin tidak dapat menghapus webinar dengan invalid ID', function() {
 
     actingAs($user)
     ->deleteJson(route('admin.webinar.destroy', 999))
+    ->assertJson(['success' => true])
     ->assertStatus(404);
 });
 
@@ -85,6 +90,7 @@ test('admin dapat mengubah webinar dengan valid ID', function() {
 
     actingAs($user)
     ->putJson(route('admin.webinar.update', $webinar->id), $webinar->toArray())
+    ->assertJson(['success' => true])
     ->assertStatus(200);
 });
 
@@ -99,5 +105,6 @@ test('admin tidak dapat mengubah webinar dengan invalid ID', function() {
 
     actingAs($user)
     ->putJson(route('admin.webinar.update', 19999), $webinar->toArray())
+    ->assertJson(['success' => true])
     ->assertStatus(404);
 });

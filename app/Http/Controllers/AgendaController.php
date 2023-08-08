@@ -22,9 +22,6 @@ class AgendaController extends Controller
         ->orderBy('started_at', 'desc')
         ->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $data
-        ]);
+        return $this->sendResponse('Fetched successfully!', $data);
     }
 }

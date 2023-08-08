@@ -20,21 +20,8 @@ class UserCourseController extends Controller
     {
         $user = User::findOrfail(auth()->user()->id);
         $data = $user->courses()->with('image')->get();
-    
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ], 200);
-    }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return $this->sendResponse('Fetched successfully!', $data);
     }
 
     /**
@@ -49,32 +36,23 @@ class UserCourseController extends Controller
         $input['course_id'] = $request->course_id;
 
         $course = Course::find($request->course_id);
-       
+
         if(!$course) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Course Not Found!'
-            ], 404);
-        }
-        
-        if($course->price < 1) {
-            UserCourse::create([...$input, 'status' => 'active']);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'You successfully join this course!'
-            ], 200);
+            return $this->sendError('Course Not Found!', 404);
         }
 
-        UserCourse::create([...$input, 'status' => 'active']);
-            
-        return response()->json([
-            'success' => true,
-            'message' => 'You successfully join this course!'
-        ], 200);
+        if($course->price < 1) {
+            UserCourse::create([...$input, 'status' => 'active']);
+
+            return $this->sendResponse('You successfully join this course!', 200);
+        }
+
         /* $checkoutService = new CheckoutService();
         dd($checkoutService->createInvoice()); */
 
+        UserCourse::create([...$input, 'status' => 'active']);
+
+        return $this->sendResponse('You successfully join this course!', 200);
     }
 
     /**
@@ -91,53 +69,14 @@ class UserCourseController extends Controller
         ->first();
 
         if(!$courseIsTaken)  {
-            return response()->json([
-                'success' => false,
-                'message' => 'Course Not Found!'
-            ], 404);
+            return $this->sendError('Course already taken!', 404);
         }
 
         $course = Course::with(['sections.subsections'])->find($course);
 
-        return response()->json([
-            'data' => [
+        return $this->sendResponse('Fetched successfully!', [
                 'course' => $course,
                 'sections' => $course->sections,
-            ]
-        ], 200);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\UserCourse  $userCourse
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(UserCourse $userCourse)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UserCourse  $userCourse
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, UserCourse $userCourse)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\UserCourse  $userCourse
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(UserCourse $userCourse)
-    {
-        //
+        ]);
     }
 }

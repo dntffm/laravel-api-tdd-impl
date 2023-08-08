@@ -20,35 +20,22 @@ class UserController extends Controller
         ]);
 
         if($validate->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Registration Failed',
-                'errors' => $validate->errors(),
-            ], 422);
+            return $this->sendError($validate->errors(),422);
         }
 
         $userExist = User::where('email', '=', $request->email)->exists();
 
         if($userExist) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Email already exists',
-            ], 500);
+            return $this->sendError('Email already exists', 500);
         }
-
-        $request->password = Hash::make($request->password);
 
         $user = User::create([
             'email' => $request->email,
             'name' => $request->name,
-            'password' => $request->password
+            'password' => Hash::make($request->password)
         ]);
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Registration Success',
-            'user' => $user,
-        ], 200);
+        return $this->sendResponse('Registration Success', 200);
     }
 
     public function login(Request $request)
@@ -59,41 +46,31 @@ class UserController extends Controller
         ]);
 
         if($validated->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validated->errors()
-            ], 422);
+            return $this->sendError($validated->errors(), 422);
         }
 
         $who = User::where('email', $request->email);
 
         if(! $who->exists()) {
+            return $this->sendError('Credential not found!', 404);
+        }
+
+        $isValid = Hash::check($request->password, $who->first()->password);
+
+        if(!$isValid) {
             return response()->json([
                 'success' => false,
-                'message' => 'Credential not found!'
-            ], 404);
+                'message' => 'Wrong password!'
+            ], 403);
         }
 
-        $checkValidity = Hash::check($request->password, $who->first()->password);
+        $user = $who->first();
+        $token = $user->createToken('token-ts');
 
-        if($checkValidity) {
-            $user = $who->first();
-            $token = $user->createToken('token-ts');
+        $data['token'] = $token->plainTextToken;
+        $data['user'] = $user;
 
-            $data['token'] = $token->plainTextToken;
-            $data['user'] = $user;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successfull!',
-                'data' => $data
-            ], 200);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Wrong password!'
-        ], 403);
+        return $this->sendResponse('Login successfully!', $data);
     }
 
     public function logout()
@@ -102,10 +79,7 @@ class UserController extends Controller
             $userToken = Auth::user()->tokens();
             $userToken->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Logout successfull!',
-            ], 200);
+            return $this->sendResponse('Logout successfull!', 200);
         }
     }
 }

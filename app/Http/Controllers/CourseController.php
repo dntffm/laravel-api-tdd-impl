@@ -27,10 +27,7 @@ class CourseController extends Controller
         ->with(['category', 'image'])
         ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ], 200);
+        return $this->sendResponse('Fetched successfully!', $data);
     }
 
     /**
@@ -44,10 +41,7 @@ class CourseController extends Controller
         ->where('id', $id)
         ->first();
 
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ], 200);
+        return $this->sendResponse('Detail course fetched!', $data);
     }
 
     /**
@@ -69,19 +63,16 @@ class CourseController extends Controller
         ]);
 
         if($validated->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validated->errors()
-            ], 422);
+            return $this->sendError($validated->errors(), 422);
         }
 
         DB::beginTransaction();
         try {
             $course = Course::create($request->except(['course_sections', 'thumbnail']));
-            
+
             if($request->has('course_sections')) {
                 foreach($request->course_sections as $sectione) {
-                    
+
                     $section = $course->sections()->create([
                         'section_name' => $sectione['section_name'],
                         'course_id' => $course->id
@@ -90,13 +81,14 @@ class CourseController extends Controller
                     if($sectione['sub_sections']) {
                         $subsections = $sectione['sub_sections'];
                         foreach($subsections as $subsection) {
+                            
                             if($subsection['type'] === 'quiz') {
                                 $ss = CourseSubSection::create([
                                     'title' => $subsection['title'],
                                     'type' => 'quiz',
                                     'section_id' => $section->id
                                 ]);
-                                
+
                                 foreach($subsection['questions'] as $question) {
                                     $quiz = Quiz::create([
                                         'question' => $question['question'],
@@ -111,16 +103,16 @@ class CourseController extends Controller
                                         ]);
                                     }
                                 }
-    
-                            } else if($subsection['type'] === 'video') {
+
+                            }
+
+                            if($subsection['type'] === 'video') {
                                 CourseSubSection::create([
                                     'title' => $subsection['title'],
                                     'video_url' => $subsection['video_url'],
                                     'type' => 'video',
                                     'section_id' => $section->id
                                 ]);
-                            } else {
-                                continue;
                             }
                         }
 
@@ -133,7 +125,7 @@ class CourseController extends Controller
                 $thumbnail = $request
                 ->file('thumbnail')
                 ->storeAs('public/course', time().$request->thumbnail->getClientOriginalName());
-                
+
                 $image = $course->image()->create([
                     'url' => $thumbnail,
                     'type' => 'image'
@@ -146,10 +138,7 @@ class CourseController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Course successfully created!'
-            ], 200);
+            return $this->sendResponse('Course successfully created!', $course);
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
@@ -169,10 +158,7 @@ class CourseController extends Controller
                 ->whereHas('user')
                 ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ], 200);
+        return $this->sendResponse('Fetched successfully!', $data);
     }
 
     /**
@@ -200,7 +186,7 @@ class CourseController extends Controller
                 'message' => $validated->errors()
             ], 422);
         }
-        
+
         $courseChosen = Course::findOrFail($course);
 
         $courseChosen->update($request->except(['course_sections', 'thumbnail']));
@@ -215,7 +201,7 @@ class CourseController extends Controller
             $thumbnail = $request
             ->file('thumbnail')
             ->storeAs('public/course', time().$request->thumbnail->getClientOriginalName());
-            
+
             $courseChosen->image()->update([
                 'url' => $thumbnail,
                 'type' => 'image'
@@ -247,9 +233,6 @@ class CourseController extends Controller
 
         $courseChosen->delete($course);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Course Successfully Deleted!'
-        ], 200);
+        return $this->sendResponse('Course successfully deleted!');
     }
 }
